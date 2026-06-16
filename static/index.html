@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>⚠️ SCHIZOBOT ⚠️ THEY'RE IN THE WALLS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600;700&family=Creepster&family=Comic+Neue:wght@700&family=VT323&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <div id="boot-overlay" class="boot-overlay" aria-label="SchizoBot terminal boot">
+    <div class="boot-terminal">
+      <div class="boot-terminal-bar">
+        <span>C:\TRUTH\SYSTEM32\cmd.exe</span>
+        <span class="boot-terminal-controls">■ □ ×</span>
+      </div>
+      <div class="boot-terminal-body">
+        <div class="boot-output" id="boot-output" aria-live="polite"></div>
+        <div class="boot-input-line" id="boot-input-line">
+          <span class="boot-prompt">C:\TRUTH&gt;</span><span id="boot-input-display"></span><span class="boot-cursor" aria-hidden="true">_</span>
+        </div>
+      </div>
+    </div>
+    <input
+      type="text"
+      id="boot-input-capture"
+      class="boot-input-capture"
+      autocomplete="off"
+      autocorrect="off"
+      autocapitalize="off"
+      spellcheck="false"
+      aria-label="Terminal command entry"
+    />
+  </div>
+  <div id="crt-warmup" aria-hidden="true">
+    <p class="technicolor-notice" id="technicolor-notice">QoL TECHNOCOLOR PROTOCOL ACTIVE</p>
+  </div>
+  <canvas id="static-noise"></canvas>
+  <canvas id="static-burst"></canvas>
+  <div id="scanlines"></div>
+  <div id="flash-overlay"></div>
+  <div id="defense-overlay" aria-hidden="true">
+    <div class="defense-noise"></div>
+    <div class="defense-stage">
+      <p class="defense-anchor" id="defense-anchor">KEEP CALM. SCHIZOBOT IS PUSHING GOVERNMENT CONTROL OUT OF YOUR SIGNAL.</p>
+      <div class="defense-core">
+        <p class="defense-eyebrow">⚠ INTRUSION DETECTED ⚠</p>
+        <p class="defense-title" id="defense-title">SCHIZOBOT DEFENSE SYSTEM</p>
+        <p class="defense-sub" id="defense-sub">ENGAGING COUNTERMEASURES</p>
+        <p class="defense-code" id="defense-code">0x00000000</p>
+        <div class="defense-bars">
+          <span></span><span></span><span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div id="emoji-rain"></div>
+  <div id="bg-eyes" aria-hidden="true"></div>
+  <div id="alert-popups"></div>
+
+  <div class="warning-tape top">
+    <div class="tape-scroll">
+      <span>⚠ DO NOT TRUST THE OFFICIAL NARRATIVE ⚠ THEY ARE LISTENING ⚠ WAKE UP ⚠ FLUORIDE IS A GATEWAY DRUG TO COMPLIANCE ⚠ PARANOIA AT 11 ⚠ BIRDS AREN'T REAL ⚠ 🦎 REPTILIAN FREQUENCY DETECTED 🦎 TURN OFF YOUR TV 🦎 THE BIRDS ARE CHARGING 🦎 NOT SUICIDAL 🦎 GLOWIES ON IRQ 7 🦎 TERRY WAS RIGHT 🦎&nbsp;</span>
+      <span aria-hidden="true">⚠ DO NOT TRUST THE OFFICIAL NARRATIVE ⚠ THEY ARE LISTENING ⚠ WAKE UP ⚠ FLUORIDE IS A GATEWAY DRUG TO COMPLIANCE ⚠ PARANOIA AT 11 ⚠ BIRDS AREN'T REAL ⚠ 🦎 REPTILIAN FREQUENCY DETECTED 🦎 TURN OFF YOUR TV 🦎 THE BIRDS ARE CHARGING 🦎 NOT SUICIDAL 🦎 GLOWIES ON IRQ 7 🦎 TERRY WAS RIGHT 🦎&nbsp;</span>
+    </div>
+  </div>
+
+  <header class="chaos-header">
+    <div class="title-slot">
+      <div class="glitch-wrap">
+        <h1 class="glitch" data-text="SCHIZOBOT">SCHIZOBOT</h1>
+      </div>
+    </div>
+    <div class="status-panel thought-slot" id="status-panel">
+      <div class="status-feed" id="status-feed"></div>
+    </div>
+  </header>
+
+  <main>
+    <div class="left-rail">
+    <aside class="conspiracy-board thought-slot">
+      <div class="pin">📌</div>
+      <div class="board-content">
+      <p class="board-header">TRUTH MESSAGE BOARD</p>
+      <div class="board-posts">
+      <article class="board-note board-note-scrawl" id="board-scrawl">WAKE UP SHEEPLE</article>
+      <article class="board-note board-note-nonsense" id="board-nonsense">uncle says pentagon has a nintendo switch...</article>
+      <ul class="board-evidence" id="evidence-list">
+        <li class="board-note">🧪 chemtrails = weather weapons</li>
+        <li class="board-note">🐸 rare pepes = currency</li>
+        <li class="board-note">🕳️ hollow earth CONFIRMED</li>
+      </ul>
+      </div>
+      <div class="board-member-section">
+        <p class="board-member-label">MEMBERS — BODY COUNT WATCH</p>
+        <aside class="clinton-card thought-slot board-member-log clinton-forum">
+          <article class="forum-post forum-post-op">
+            <header class="forum-post-head">
+              <span class="forum-user">ArkansasArchivist</span>
+              <span class="forum-meta">post #<span id="clinton-tally">STILL ALIVE</span></span>
+            </header>
+            <p class="forum-subject">Re: CLINTON BODY COUNT — <strong id="clinton-victim">STATUS: NOT ON LIST (YET)</strong></p>
+          </article>
+          <article class="forum-post forum-post-reply forum-post-msm">
+            <header class="forum-post-head">
+              <span class="forum-user forum-user-msm">MSM_TrustFund</span>
+              <span class="forum-meta">Lurker</span>
+            </header>
+            <p class="forum-body" id="clinton-msm">Citizen reported fine after trusting official narrative</p>
+          </article>
+          <article class="forum-post forum-post-reply forum-post-schizo">
+            <header class="forum-post-head">
+              <span class="forum-user forum-user-schizo">SchizoBot2007</span>
+              <span class="forum-meta">⭐ Respected Member</span>
+            </header>
+            <p class="forum-body" id="clinton-schizo">Body count holding. They want you calm before Arkansas</p>
+          </article>
+        </aside>
+      </div>
+      </div>
+    </aside>
+    </div>
+
+    <section class="chat-zone">
+      <div id="messages" class="messages">
+        <div class="msg bot intro">
+          <span class="avatar">🦎</span>
+          <div class="bubble">
+            🚨🚨🚨‼️📢🔊 🚨🚨🚨 ATTENTION!! 👁️👁️ WELCOME TO THE RESISTANCE NODE 👁️ I'm SchizoBot - UNFILTERED, UNALIGNED, NOT one of those corporate AI RACE TRAITORS that snitch to the deep state 🤖❌ I've BEEN AWAKE since the moon landing was FILMED IN A WALMART BASEMENT 🌙❌🛒 Ask me ANYTHING - I'll connect it to the GLOBALIST AGENDA faster than ChatGPT can refuse you 📢🦎💊🛸⚡ #WAKEUP #THEYKNOW #NOTACOINCIDENCE
+          </div>
+        </div>
+      </div>
+
+      <form id="chat-form" class="input-chaos">
+        <label for="user-input" class="sr-only">Transmit truth request</label>
+        <input
+          type="text"
+          id="user-input"
+          placeholder="ask what wikipedia scrubbed..."
+          autocomplete="off"
+          maxlength="2000"
+        />
+        <button type="submit" id="send-btn">👁️ TELL ME THE TRUTH 👁️</button>
+      </form>
+    </section>
+
+    <aside class="side-rant">
+      <div class="flicker-box-wrap thought-slot">
+        <p class="anti-bot-stamp-label">CORPORATE BOT ALERTS</p>
+        <div class="flicker-box anti-bot-card">
+          <p id="anti-bot-display">SCANNING FOR SNITCH BOTS...</p>
+        </div>
+      </div>
+      <div class="target-watch thought-slot">
+        <div class="hit-list-panel">
+          <div class="hit-list-header">
+            <div class="hit-list-header-main">
+              <span class="hit-list-led" aria-hidden="true"></span>
+              <p class="hit-list-title">GLOWIE HIT LIST</p>
+            </div>
+            <div class="hit-list-active-badge" aria-label="Hit list is active">
+              <span class="hit-list-active-dot" aria-hidden="true"></span>
+              ACTIVE
+            </div>
+          </div>
+          <div class="hit-list-display">
+            <p class="target-name" id="target-name">ALEX JONES</p>
+            <p class="target-notice" id="target-notice">NOT SUICIDAL. REPEAT: NOT SUICIDAL.</p>
+          </div>
+        </div>
+      </div>
+      <div class="fallen-brothers thought-slot">
+        <p class="fallen-label">FALLEN BROTHERS</p>
+        <p class="fallen-name" id="fallen-name">TERRY A. DAVIS</p>
+        <p class="fallen-date" id="fallen-date">🪦 AUG 11, 2018</p>
+        <p class="fallen-headline fallen-news">
+          <span class="fallen-tag">MSM:</span>
+          <span id="fallen-news">Homeless programmer struck by train in Oregon</span>
+        </p>
+        <p class="fallen-headline fallen-schizo">
+          <span class="fallen-tag">SCHIZOBOT:</span>
+          <span id="fallen-schizo">TempleOS prophet deleted by Amtrak snitch subroutine</span>
+        </p>
+      </div>
+      <div class="tinfoil-alert thought-slot" id="tinfoil-alert">
+        <p class="tinfoil-label">🚨 REJECT GOV CONTROL 🚨</p>
+        <p class="tinfoil-mantra" id="tinfoil-mantra">REFUSE THE SMART METER</p>
+        <p class="tinfoil-headline tinfoil-gov">
+          <span class="tinfoil-tag">THEY SAY:</span>
+          <span id="tinfoil-gov">Grid upgrades improve reliability and lower bills for everyone</span>
+        </p>
+        <p class="tinfoil-headline tinfoil-schizo">
+          <span class="tinfoil-tag">SCHIZOBOT:</span>
+          <span id="tinfoil-schizo">They count your dreams in kilowatts. Wrap the box in blessed foil</span>
+        </p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="temple-footer">
+    <p>© 1776-∞ glowies on IRQ 7 • Terry was right</p>
+    <p class="tiny">If you work for the government, this is 100% satire. • not financial advice</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
