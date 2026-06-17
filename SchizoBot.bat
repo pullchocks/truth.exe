@@ -26,6 +26,11 @@ exit /b 1
 
 :run
 echo [SchizoBot] Using: %PY_CMD%
+call :ensure_venv
+if errorlevel 1 (
+  pause
+  exit /b 1
+)
 "%PY_CMD%" launch.py
 if errorlevel 1 pause
 exit /b %ERRORLEVEL%
@@ -62,3 +67,11 @@ if not defined PY_CMD (
 
 :find_python_done
 exit /b 0
+
+:ensure_venv
+"%PY_CMD%" -c "import ensurepip" >nul 2>nul
+if not errorlevel 1 exit /b 0
+echo [SchizoBot] Python venv support is missing.
+echo [SchizoBot] Reinstall Python from https://www.python.org/downloads/windows/
+echo           Enable pip and venv during setup, then re-run this file.
+exit /b 1
