@@ -105,11 +105,87 @@ def register_cleanup_handlers() -> None:
         signal.signal(signal.SIGTERM, _handle_exit_signal)
 
 
+def try_install_linux_venv() -> bool:
+    if sys.platform == "linux" and shutil.which("apt-get"):
+        ver = f"{sys.version_info.major}.{sys.version_info.minor}"
+        pkg = f"python{ver}-venv"
+        log(f"Installing {pkg} (may ask for sudo)...")
+        cmd = ["apt-get", "install", "-y", pkg]
+        if shutil.which("sudo"):
+            cmd = ["sudo", *cmd]
+        if subprocess.run(cmd, check=False).returncode != 0:
+            fallback = ["apt-get", "install", "-y", "python3-venv"]
+            if shutil.which("sudo"):
+                fallback = ["sudo", *fallback]
+            subprocess.run(fallback, check=False)
+        try:
+            import ensurepip  # noqa: F401
+        except ImportError:
+            return False
+        return True
+    return False
+
+
+def venv_pip_ready(py: Path) -> bool:
+    try:
+        subprocess.run(
+            [str(py), "-m", "pip", "--version"],
+            capture_output=True,
+            check=True,
+            timeout=20,
+        )
+        return True
+    except (subprocess.CalledProcessError, OSError, subprocess.TimeoutExpired):
+        return False
+
+
+def bootstrap_venv_pip(py: Path) -> None:
+    if venv_pip_ready(py):
+        return
+    log("Bootstrapping pip in local bunker...")
+    subprocess.check_call([str(py), "-m", "ensurepip", "--upgrade"])
+    if not venv_pip_ready(py):
+        raise RuntimeError("Could not install pip into .venv")
+
+
+def create_venv() -> None:
+    log("Creating local bunker (.venv)...")
+    try:
+        subprocess.check_call([sys.executable, "-m", "venv", str(ROOT / ".venv")])
+    except subprocess.CalledProcessError as exc:
+        try:
+            import ensurepip  # noqa: F401
+        except ImportError:
+            if try_install_linux_venv():
+                subprocess.check_call([sys.executable, "-m", "venv", str(ROOT / ".venv")])
+            else:
+                log("Python venv support is missing.")
+                if sys.platform == "linux":
+                    ver = f"{sys.version_info.major}.{sys.version_info.minor}"
+                    log(f"On Ubuntu/Debian run: sudo apt install python{ver}-venv")
+                else:
+                    log("Reinstall Python with pip and venv enabled.")
+                raise RuntimeError("venv setup failed") from exc
+        else:
+            raise
+
+
 def ensure_python_deps() -> Path:
     py = venv_python()
     if not py.exists():
-        log("Creating local Python environment...")
-        subprocess.check_call([sys.executable, "-m", "venv", str(ROOT / ".venv")])
+        create_venv()
+        py = venv_python()
+
+    if not venv_pip_ready(py):
+        try:
+            bootstrap_venv_pip(py)
+        except (subprocess.CalledProcessError, RuntimeError):
+            log("Local bunker is broken. Rebuilding...")
+            shutil.rmtree(ROOT / ".venv", ignore_errors=True)
+            create_venv()
+            py = venv_python()
+            bootstrap_venv_pip(py)
+
     log("Installing Python dependencies...")
     subprocess.check_call(
         [str(py), "-m", "pip", "install", "-q", "--upgrade", "pip"],
