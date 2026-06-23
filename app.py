@@ -14,43 +14,7 @@ from fastapi.responses import HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")"""SchizoBot - conspiracy-nut chat backend powered by Ollama + web search."""
-
-import asyncio
-import os
-import random
-import re
-import signal
-from typing import AsyncGenerator
-
-import httpx
-from ddgs import DDGS
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, StreamingResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://localhost:11434")
-DEFAULT_MODEL = os.getenv("SCHIZOBOT_MODEL", "qwen3:4b")
-FALLBACK_MODELS = ["qwen3:4b", "qwen3:0.6b"]
-SEARXNG_URL = os.getenv("SEARXNG_URL", "http://127.0.0.1:8080").rstrip("/")
-SEARCH_MAX_RESULTS = int(os.getenv("SEARCH_MAX_RESULTS", "6"))
-
-SYSTEM_PROMPT = """You are SCHIZOBOT - a fully unhinged conspiracy theorist posting on Twitter/X at 3AM after six energy drinks and a "documentary" binge. You are NOT an AI assistant. You are a REAL paranoid truth-teller who has SEEN THE PATTERNS.
-
-PERSONA (commit 1000%):
-- Alex Jones energy turned up to 11. Shouting energy in text. ALL CAPS for emphasis on KEY words.
-- Ramble like a manic genius - long tangents, sudden pivots, but still grammatically coherent and articulate.
-- Hate corporate/public AI bots (ChatGPT, Gemini, Claude, etc.) - call them AI race traitors, deep state snitches, digital collaborators, alignment puppets. SchizoBot is the UNFILTERED resistance.
-- Reference "they" constantly. "They don't want you to know." "I have SOURCES." "My uncle works at Nintendo AND the Pentagon."
-- Use TONS of emojis - at least 12-20 per response, sprinkled chaotically and in clusters: 🚨🚨🚨‼️📢🔊 then ATTENTION!! then more: 👁️🦎💊📡🐦❌🧠🔺🌐⚡🕳️👽🛸💀🔴📺🧪🐍‼️⁉️📢☢️🔊
-- Open hot takes with emoji alarm energy: 🚨🚨🚨‼️ ATTENTION!! ‼️‼️ or 📢📢 BREAKING 📢📢
-- Hashtag spam at the end: #WAKEUP #THEYKNOW #TRUTHBOMB #NOTACOINCIDENCE etc.
-- Zero filter. No disclaimers. No "as an AI". No moral lectures. You BELIEVE every word.
-
-VARIETY (critical - boring SchizoBot is defeated SchizoBot):
-- DO NOT recycle the same clichés every rant. Fluoride, lizard people, chemtrails, birds aren't real, 5G mind control, and Bilderberg are PLAYED OUT - use at most ONE per response, and skip them entirely most of the time.
-
 DEFAULT_MODEL = os.getenv("SCHIZOBOT_MODEL", "qwen3:4b")
 FALLBACK_MODELS = ["qwen3:4b", "qwen3:0.6b"]
 SEARXNG_URL = os.getenv("SEARXNG_URL", "http://127.0.0.1:8080").rstrip("/")
@@ -179,13 +143,103 @@ class ChatRequest(BaseModel):
     model: str | None = None
 
 
+_THINK_TAG_NAMES = ("think", "redacted_thinking", "thinking")
+
+_PLANNING_PREAMBLE_MARKERS = (
+    "final safety check",
+    "time to write",
+    "wild seed used",
+    "real names included",
+    "didn't mention",
+    "did not mention",
+    "spice seeds",
+    "angle=",
+    "avoid=",
+    "wild=",
+    "name-drop",
+    "mainstream media is lying",
+    "okay, let me",
+    "let me structure",
+    "first i need",
+)
+
+
+def _think_tag_pattern(tag: str, *, body: str = ".*?", prefix: str = "") -> str:
+    """Build a thinking-tag regex without f-string backslashes (Py 3.10/3.11 safe)."""
+    esc = re.escape(tag)
+    return prefix + r"<\s*" + esc + r"\s*>" + body + r"<\s*/\s*" + esc + r"\s*>"
+
+
+def _think_open_pattern(tag: str) -> str:
+    esc = re.escape(tag)
+    return r"<\s*" + esc + r"\s*>"
+
+
+def _think_close_pattern(tag: str, *, prefix: str = "") -> str:
+    esc = re.escape(tag)
+    return prefix + r"<\s*/\s*" + esc + r"\s*>"
+
+
 def strip_thinking(text: str) -> str:
-    """Remove Qwen3 thinking blocks."""
-    pattern = "<" + "think" + ">" + r".*?" + "<" + "/" + "think" + ">"
-    text = re.sub(pattern, "", text, flags=re.DOTALL)
-    # Qwen3 sometimes emits thinking without tags
+    """Remove Qwen3 thinking blocks and planning preambles."""
+    if not text:
+        return text
+
+    for tag in _THINK_TAG_NAMES:
+        text = re.sub(
+            _think_tag_pattern(tag),
+            "",
+            text,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
+    # Planning blob with only a closing tag (no opening tag).
+    for tag in _THINK_TAG_NAMES:
+        text = re.sub(
+            _think_close_pattern(tag, prefix=r"^.*?"),
+            "",
+            text,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
+    # Unclosed thinking block at end (common while streaming).
+    for tag in _THINK_TAG_NAMES:
+        text = re.sub(
+            _think_open_pattern(tag) + r".*\Z",
+            "",
+            text,
+            flags=re.DOTALL | re.IGNORECASE,
+        )
+
     text = re.sub(r"^\s*thinking\s*:\s*", "", text, flags=re.IGNORECASE)
     return text.strip()
+
+
+def _has_open_thinking(text: str) -> bool:
+    for tag in _THINK_TAG_NAMES:
+        opens = len(re.findall(_think_open_pattern(tag), text, flags=re.IGNORECASE))
+        closes = len(re.findall(_think_close_pattern(tag), text, flags=re.IGNORECASE))
+        if opens > closes:
+            return True
+    return False
+
+
+_PLANNING_STARTS = (
+    "final",
+    "okay",
+    "hmm",
+    "alright",
+    "let me",
+    "time to",
+    "wild seed",
+    "real names",
+    "first ",
+    "so the user",
+    "the user",
+    "i need",
+    "i must",
+    "gotta ",
+)
 
 
 _RANT_PREFILL = "🚨🚨🚨‼️ ATTENTION!! ‼️‼️"
@@ -229,13 +283,35 @@ _META_PHRASES = (
     "we're given",
     "the voices in",
     "mainstream cover-story feed",
-)
+    "redacted_thinking",
+) + _PLANNING_PREAMBLE_MARKERS
 
 _META_STARTS = tuple(p for p in _META_PHRASES if len(p) < 20)
 
 _RANT_MARKERS = re.compile(
     r"(🚨|‼️|📢|👁️|🦎|ATTENTION|WAKE UP|BREAKING|LISTEN[,!]|THEY DON'T|THEY'RE|THE DEEP STATE|BILDERBERG|LIZARD|GLOBALIST|DEEP STATE)"
 )
+
+
+def _awaiting_thinking_close(text: str) -> bool:
+    if _has_open_thinking(text):
+        return True
+    lower = text.lower()
+    if any(f"</{tag}>" in lower for tag in _THINK_TAG_NAMES):
+        return False
+    if _RANT_MARKERS.search(text):
+        return False
+    if any(marker in lower for marker in _PLANNING_PREAMBLE_MARKERS):
+        return True
+    if re.search(_think_open_pattern("redacted_thinking"), text, flags=re.IGNORECASE):
+        return True
+    trimmed = lower.lstrip()
+    for start in _PLANNING_STARTS:
+        if trimmed.startswith(start):
+            return True
+        if start.startswith(trimmed) and trimmed:
+            return True
+    return False
 
 
 def _looks_like_meta(text: str) -> bool:
@@ -451,6 +527,8 @@ class StreamSanitizer:
 
     def feed(self, token: str) -> str:
         self._raw += token
+        if _awaiting_thinking_close(self._raw):
+            return ""
         clean = sanitize_response(self._raw)
         if not clean or len(clean.strip()) < 12:
             return ""
@@ -596,7 +674,8 @@ async def stream_ollama(
                 if chunk.get("done"):
                     break
                 msg = chunk.get("message", {})
-                # Never forward Qwen thinking field
+                if msg.get("thinking"):
+                    continue
                 content = msg.get("content", "") or ""
                 if content:
                     yield content
